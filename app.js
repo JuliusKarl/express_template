@@ -4,12 +4,29 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
+// Routes re-routing
 const productRoutes = require('./api/routes/products');
 const orderRoutes = require('./api/routes/orders');
 
+// MongoDB connection
 require('dotenv').config();
-mongoose.connect('mongodb://JuliusKarl:Juliuskarl24031997@ds047571.mlab.com:47571/nodejs', { useNewUrlParser: true, useUnifiedTopology: true });
+const uri = `mongodb+srv://${process.env.DBUSER}:${process.env.DBPASS}@juliuskarlcluster0-ql03u.mongodb.net/test?retryWrites=true&w=majority`;
+mongoose.connect(uri, function(err) {
+    if (err) {console.log(err)}
+    else {console.log("Connected to MongoDB... ")}
+});
 
+// const MongoClient = require('mongodb').MongoClient;
+// const uri = "mongodb+srv://JuliusKarl:24031997@juliuskarlcluster0-ql03u.mongodb.net/test?retryWrites=true&w=majority";
+// const client = new MongoClient(uri, { useNewUrlParser: true });
+// client.connect(err => {
+//   const collection = client.db("test").collection("devices");
+//   // perform actions on the collection object
+//   client.close();
+// });
+
+
+// Middleware setup
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
@@ -22,8 +39,6 @@ app.use(bodyParser.json());
 //         return res.status(200).json({});
 //     };
 // });
-
-
 
 // Routes which should handle requests.
 app.use('/products', productRoutes);
