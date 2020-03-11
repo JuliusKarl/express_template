@@ -4,37 +4,50 @@ const mongoose = require('mongoose');
 
 const Product = require('../models/product');
 
-// Get all products
+// GET all products
 router.get('/', (req, res, next) => {
-    Product.find()
+    Product
+        .find()
+        .select('name price _id')
         .exec()
         .then(docs => {
-            console.log(docs);
-            res.status(200).json(docs);
+            const response = {
+                count: docs.length,
+                products: docs.map(doc => {
+                    return {
+                        name: doc.name,
+                        price: doc.price,
+                        _id: doc._id,
+                    }
+                })
+            }
+            res.status(200).json(response);
         })
         .catch(err => {
             res.status(500).json({error: err})
         })
-    
 });
 
-// Get a single product ID
+// GET a single product by ID
 router.get('/:productId', (req, res, next) => {
     const id = req.params.productId;
-    Product.findById(id)
+    Product
+        .findById(id)
         .exec()
         .then(doc => {
-            console.log("From Database", doc);
-            (doc? res.status(200).json(doc) : res.status(404).json({ message: "No valid entry found for provided ID"}));
-            
+            const response = {
+                name: doc.name,
+                price: doc.price,
+                _id: doc._id
+            }
+            res.status(200).json(response);
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json({error: err})
         });
 });
 
-// Post a product to the DB
+// POST a product
 router.post('/', (req, res, next) => {
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
@@ -46,25 +59,57 @@ router.post('/', (req, res, next) => {
         .then(result => {
             console.log(result);
             res.status(201).json({
-                message: "Handling post Requests",
-                createdProduct: product
+                message: "Created product",
+                createdProduct: {
+                    name: result.name,
+                    price: result.price,
+                    id: result.id
+                }
             });
         })
         .catch(err => {
-            console.log(err);
             res.status(500).json({ error: err});
         })
 });
 
-router.delete('/:productId', function(req, res, next) {
+// PATCH a product by ID
+router.patch('/:productId', function(req, res, next) {
     const id = req.params.productId;
-    Product.remove({ _id: id })
+    const updateOps = {};
+    for (const ops of req.body) {
+        updateOps[ops.propName] = ops.value;
+    }
+    Product
+        .update({ _id: id }, { $set: updateOps})
         .exec()
         .then(result => {
-            res.status(200).json(result);
+            const response = {
+                name: result.name,
+                price: result.price,
+                _id: result.id
+            }
+            res.status(200).json(response);
         })
         .catch(err => {
-            console.log(err);
+            res.status(400).json({error: err})
+        });
+});
+
+// DELETE a product by ID
+router.delete('/:productId', function(req, res, next) {
+    const id = req.params.productId;
+    Product
+        .remove({ _id: id })
+        .exec()
+        .then(result => {
+            const response = {
+                name: result.name,
+                price: result.price,
+                _id: result.id
+            }
+            res.status(200).json(response);
+        })
+        .catch(err => {
             res.status(500).json({error: err});
         })
 });
