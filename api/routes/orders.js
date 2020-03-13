@@ -10,6 +10,7 @@ router.get('/', (req, res, next) => {
     Order
         .find()
         .select('_id quantity productId')
+        .populate('productId', '_id name')
         .exec()
         .then(result => {
             const response = {
@@ -34,6 +35,7 @@ router.get('/:orderId', (req, res, next) => {
     const id = req.params.orderId;
     Order
         .findById(id)
+        .populate('productId')
         .exec()
         .then(result => {
             const response = {
