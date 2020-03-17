@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 // Route Paths
 const productRoutes = require('./api/routes/products');
 const orderRoutes = require('./api/routes/orders');
+const userRoutes = require('./api/routes/user');
 
 // MongoDB connection
 require('dotenv').config();
@@ -18,6 +19,7 @@ mongoose.connect(uri, { useUnifiedTopology: true, useNewUrlParser: true}, functi
 
 // Middleware setup
 app.use(morgan("dev"));
+app.use(express.static('uploads'))
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
 
@@ -34,6 +36,7 @@ app.use(bodyParser.json());
 // Routes which should handle requests.
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
+app.use('/user', userRoutes);
 
 
 app.use('*', function(req, res, next) {

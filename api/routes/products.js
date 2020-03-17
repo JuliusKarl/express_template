@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
 
+// Will not CREATE a folder, only works for existing folders
 const storage = multer.diskStorage({
         destination: function(req, file, cb) {
             cb(null, './uploads/');
