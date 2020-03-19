@@ -121,10 +121,27 @@ router.patch('/:productId', function(req, res, next) {
 });
 
 // DELETE a product by ID
-router.delete('/:productId', function(req, res, next) {
+router.delete('/:productId', (req, res, next) => {
     const id = req.params.productId;
     Product
         .remove({ _id: id })
+        .exec()
+        .then(result => {
+            const response = {
+                name: result.name,
+                price: result.price,
+                _id: result.id
+            }
+            res.status(200).json(response);
+        })
+        .catch(err => {
+            res.status(500).json({error: err});
+        })
+});
+
+router.delete('/', function(req, res, next) {
+    Product
+        .remove()
         .exec()
         .then(result => {
             const response = {

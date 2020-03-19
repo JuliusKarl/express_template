@@ -5,6 +5,26 @@ const bcrypt = require('bcrypt');
 
 const User = require('../models/user');
 
+router.get('/', (req, res, next) => {
+    User
+        .find()
+        .exec()
+        .then(result => {
+            const response = {
+                users: result.map(result => {
+                    return {
+                        _id: result.id,
+                        name: result.name,
+                        email: result.email,
+                        password: result.password
+                    }
+                })
+            }
+            res.status(200).json(response)
+        })
+        .catch(err => {res.status(500).json({error: err})})
+});
+
 router.post('/signup' , (req, res, next) => {
     bcrypt.hash(req.body.password, 10, (err, hash) => {
         if (err) {
@@ -28,6 +48,36 @@ router.post('/signup' , (req, res, next) => {
     });
 });
 
-router.post('/signin' , (req, res, next) => {
+router.get('/:userId', (req, res, next) => {
+    const id = req.params.userId;
+    User
+        .findById({email: req.body.email})
+        .exec()
+        .then(result => {
+            const response = {
+                _id: result.id,
+                name: result.name,
+                email: result.email,
+                password: "Nice try."
+            }
+            res.status(200).json(response)
+        })
+        .catch(err => {res.status(500).json({error: err})})
+})
 
-});
+router.delete('/:userId', (req, res, next) => {
+    const id = req.params.userId;
+    User
+        .remove({_id: id})
+        .exec()
+        .then(result => {
+            const response = {
+                message: "User deleted."
+            }
+            res.status(200).json(response)
+        })
+        .catch(err => {console.log(err);res.status(500).json({error: err})})
+})
+
+
+module.exports = router;
