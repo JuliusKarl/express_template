@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
+const checkAuth = require('../middleware/check-auth');
 
 // Will not CREATE a folder, only works for existing folders
 const storage = multer.diskStorage({
@@ -70,7 +71,7 @@ router.get('/:productId', (req, res, next) => {
 });
 
 // POST a product
-router.post('/', upload.single('productImage'), (req, res, next) => {
+router.post('/', checkAuth, upload.single('productImage'), (req, res, next) => {
     console.log(req.file);
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
@@ -98,7 +99,7 @@ router.post('/', upload.single('productImage'), (req, res, next) => {
 });
 
 // PATCH a product by ID
-router.patch('/:productId', function(req, res, next) {
+router.patch('/:productId', checkAuth, function(req, res, next) {
     const id = req.params.productId;
     const updateOps = {};
     for (const ops of req.body) {
