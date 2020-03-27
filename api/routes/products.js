@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const multer = require('multer');
 const checkAuth = require('../middleware/check-auth');
+const ProductsController = require("../controllers/products");
 
 // Will not CREATE a folder, only works for existing folders
 const storage = multer.diskStorage({
@@ -27,134 +27,21 @@ const upload = multer({storage: storage, fileFilter: fileFilter})
 const Product = require('../models/product');
 
 // GET all products
-router.get('/', (req, res, next) => {
-    Product
-        .find()
-        .select('name price _id productImage')
-        .exec()
-        .then(docs => {
-            const response = {
-                count: docs.length,
-                products: docs.map(doc => {
-                    return {
-                        name: doc.name,
-                        price: doc.price,
-                        _id: doc._id,
-                        productImage: doc.productImage     
-                    }
-                })
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err})
-        })
-});
+router.get('/', ProductsController.products_get_all);
 
 // GET a single product by ID
-router.get('/:productId', (req, res, next) => {
-    const id = req.params.productId;
-    Product
-        .findById(id)
-        .exec()
-        .then(doc => {
-            const response = {
-                name: doc.name,
-                price: doc.price,
-                _id: doc._id
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err})
-        });
-});
+router.get('/:productId', ProductsController.products_get_one);
 
 // POST a product
-router.post('/', checkAuth, upload.single('productImage'), (req, res, next) => {
-    console.log(req.file);
-    const product = new Product({
-        _id: new mongoose.Types.ObjectId(),
-        name: req.body.name,
-        price: req.body.price,
-        productImage: req.file.path
-    });
-    product
-        .save()
-        .then(result => {
-            console.log(result);
-            res.status(201).json({
-                message: "Created product",
-                createdProduct: {
-                    name: result.name,
-                    price: result.price,
-                    id: result.id,
-                    productImage: result.productImage
-                }
-            });
-        })
-        .catch(err => {
-            res.status(500).json({ error: err});
-        })
-});
+router.post('/', checkAuth, upload.single('productImage'), ProductsController.products_post_one);
 
 // PATCH a product by ID
-router.patch('/:productId', checkAuth, function(req, res, next) {
-    const id = req.params.productId;
-    const updateOps = {};
-    for (const ops of req.body) {
-        updateOps[ops.propName] = ops.value;
-    }
-    Product
-        .update({ _id: id }, { $set: updateOps})
-        .exec()
-        .then(result => {
-            const response = {
-                name: result.name,
-                price: result.price,
-                _id: result.id
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(400).json({error: err})
-        });
-});
+router.patch('/:productId', checkAuth, ProductsController.products_patch_one);
 
 // DELETE a product by ID
-router.delete('/:productId', (req, res, next) => {
-    const id = req.params.productId;
-    Product
-        .remove({ _id: id })
-        .exec()
-        .then(result => {
-            const response = {
-                name: result.name,
-                price: result.price,
-                _id: result.id
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err});
-        })
-});
+router.delete('/:productId', ProductsController.products_delete_one);
 
-router.delete('/', function(req, res, next) {
-    Product
-        .remove()
-        .exec()
-        .then(result => {
-            const response = {
-                name: result.name,
-                price: result.price,
-                _id: result.id
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err});
-        })
-});
+// Delete all products
+router.delete('/', ProductsController.products_delete_all);
 
 module.exports = router;

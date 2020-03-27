@@ -3,129 +3,25 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const checkAuth = require("../middleware/check-auth");
 
-const Order = require('../models/order');
-const Product = require('../models/product');
+// const Order = require('../models/order');
+// const Product = require('../models/product');
+
+const OrdersController = require('../controllers/orders');
 
 // GET all orders
-router.get('/', checkAuth, (req, res, next) => {
-    Order
-        .find()
-        .select('_id quantity productId')
-        .populate('productId', '_id name')
-        .exec()
-        .then(result => {
-            const response = {
-                count: result.length,
-                orders: result.map(result => {
-                    return {
-                        _id: result.id,
-                        quantity: result.quantity,
-                        productId: result.productId
-                    }
-                })
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err})
-        })
-});
+router.get('/', checkAuth, OrdersController.orders_get_all);
 
 // GET a single order by ID
-router.get('/:orderId', checkAuth, (req, res, next) => {
-    const id = req.params.orderId;
-    Order
-        .findById(id)
-        .populate('productId')
-        .exec()
-        .then(result => {
-            const response = {
-                _id: result.id,
-                quantity: result.quantity,
-                productId: result.productId
-            }
-            return res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err})
-        });
-});
+router.get('/:orderId', checkAuth, OrdersController.orders_get_one);
 
 // POST an order
-router.post("/", checkAuth, (req, res, next) => {
-    Product
-        .findById(req.body.productId)
-        .then(product => {
-                if (!product) {
-                    return res.status(404).json({message: "Product not found"})
-                }
-                const order = new Order({
-                    _id: new mongoose.Types.ObjectId,
-                    quantity: req.body.quantity,
-                    productId: req.body.productId
-            })
-            return order
-                .save()
-                .then(result => {
-                    console.log(result);
-                    res.status(201).json({
-                        message: "Created order",
-                        createdOrder: {
-                            _id: result.id,
-                            quantity: result.quantity,
-                            productId: result.productId
-                        }
-                    });
-                    res.status(200).json(response);
-                })
-                .catch(err => {
-                    res.status(500).json({error: err})
-                })
-        })
-        .catch(err => {
-            console.log("Product not found.");
-            res.status(500).json({error: err})
-        })
-});
+router.post("/", checkAuth, OrdersController.orders_post_one);
 
 // PATCH an order by ID
-router.patch('/:orderId', checkAuth, (req, res, next) => {
-    const id = req.params.orderId;
-    const updateOps = {};
-    for (const ops of req.body) {
-        updateOps[ops.propName] = ops.value;
-    }
-    Order.update({ _id: id }, { $set: updateOps})
-        .exec()
-        .then(result => {
-            const response = {
-                _id: result.id,
-                quantity: result.quantity,
-                productId: result.productId,
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(400).json({error: err})
-        });
-});
+router.patch('/:orderId', checkAuth, OrdersController.orders_patch_one);
 
 // DELETE an order
-router.delete("/:orderId", checkAuth, (req, res, next) => {
-    const id = req.params.orderId;
-    Order
-        .remove({ _id: id})
-        .exec()
-        .then(result => {
-            const response = {
-                _id: result.id,
-                quantity: result.quantity,
-                productId: result.productId,
-            }
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({error: err});
-        })
-})
+router.delete("/:orderId", checkAuth, OrdersController.orders_delete_one);
+
+
 module.exports = router;
